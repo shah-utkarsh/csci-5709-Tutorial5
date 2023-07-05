@@ -1,85 +1,112 @@
+const path = require('path');
 const express = require('express');
-
-const userObj = require('../database/users');
+const fs = require('fs');
+const usersObj = require('../database/users');
 
 const router = express.Router();
 
+//default
 router.get("/", (req, res) => {
-    res.send("Default Page")
-});
+    res.status(200).json({
+        message: "Default response"
+    })
+})
 
-router.get("/users", (req, res) => {
+// GET API to retrieve all users
+router.get('/users', (req, res) => {
     try {
-        if (!userObj || !userObj.length) {
+        if (!usersObj || !usersObj.length) {
             return res.status(404).json({ success: false, data: "Users not found!" })
         }
-    }
-    catch (err) {
-        return res.status(500).json({ message: "Internal Server Error" })
-    }
-    return res.status(200).json({ message: "Users retrieved", success: true, users: userObj, numberOfUsersRetrived: userObj.length });
-});
-
-router.get("/user/:id", (req, res) => {
-    const userId = req.params.id;
-    const user = userObj.find(user => user.id === userId);
-    try {
-        if (!user) {
-            return res.status(404).json({ success: false, data: "User not found!" })
-        }
-    }
-    catch (err) {
-        return res.status(500).json({ message: "Internal Server Error" })
-    }
-    return res.status(200).json({ message: "User retrieved", success: true, user: user })
-});
-
-router.post("/add", (req, res) => {
-    const { email, firstName } = req.body;
-    if (!email || !firstName) {
-        res.status(400).json({
-            success: false,
-            message: 'Missing required User data fields'
+        return res.status(200).json({
+            message: "Users retrived",
+            success: true,
+            users: usersObj
         });
-        return;
+    }
+    catch (err) {
+        return res.status(500).json({
+            message: "Internal Server Error"
+        })
     }
 
-    const id = generateUserId();
+});
 
-    const newUser = {
-        email: email,
-        firstName: firstName,
-        id: id,
+// POST API to create a new user
+router.post('/add', (req, res) => {
+    const id = generateUniqueUserID();
+    let newUser = {
+        email: req.body.email,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        id: id // Generate a unique ID
     };
-    userObj.push(newUser);
 
-    res.json({
-        message: 'User added',
-        success: true,
+    usersObj.push(newUser);
+    const usersFilePath = path.join(__dirname, '..', 'database', 'users.js');
+
+    fs.writeFile(usersFilePath, 'module.exports = ' + JSON.stringify(usersObj, null, 2), err => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ message: "Error adding user", success: false });
+        } else {
+            res.json({
+                message: "User added",
+                success: true,
+                id: newUser.id // Return the ID of the new user
+            });
+        }
     });
 });
 
+// PUT API to update an existing user
 router.put('/update/:id', (req, res) => {
-    const id = req.params.id;
-    const { email, firstName } = req.body;
+    let userIndex = usersObj.findIndex(user => user.id === req.params.id);
 
-    const user = userObj.find(user => user.id === id);
-
-    if (user) {
-        user.email = email || user.email;
-        user.firstName = firstName || user.firstName;
-
-        res.json({
-            message: 'User updated',
-            success: true,
-        });
+    if (userIndex === -1) {
+        res.status(404).json({ message: "User not found", success: false });
+    } else if (!req.body.email && !req.body.firstName) {
+        // If neither email nor firstName were provided, send a 400 response
+        res.status(400).json({ message: "Incorrect request", success: false });
     } else {
-        res.status(404).json({
-            success: false,
-            message: 'User not found',
+        // If at least one field was provided, update the user
+        usersObj[userIndex].email = req.body.email || usersObj[userIndex].email;
+        usersObj[userIndex].firstName = req.body.firstName || usersObj[userIndex].firstName;
+        usersObj[userIndex].lastName = req.body.lastName || usersObj[userIndex].lastName;
+
+        const usersFilePath = path.join(__dirname, '..', 'database', 'users.js');
+
+        // Write the updated users array to the users.js file
+        fs.writeFile(usersFilePath, 'module.exports = ' + JSON.stringify(usersObj, null, 2), err => {
+            if (err) {
+                console.error(err);
+                res.status(500).json({ message: "Error updating user", success: false });
+            } else {
+                res.json({
+                    message: "User updated",
+                    success: true
+                });
+            }
         });
     }
 });
+
+
+// GET API to retrieve a single user
+router.get('/user/:id', (req, res) => {
+    let user = usersObj.find(user => user.id === req.params.id);
+
+    if (!user) {
+        res.status(404).json({ message: "User not found", success: false });
+    } else {
+        res.status(200).json({
+            message: "User " + user.firstName + " successfully retrived",
+            success: true,
+            user: user
+        });
+    }
+});
+
 
 // catch all wrong routes
 router.all("*", (req, res) => {
@@ -89,9 +116,8 @@ router.all("*", (req, res) => {
         suggestion: "Check if the url is correct"
     })
 })
-
-function generateUserId() {
-    return Math.random().toString(36).substr(9, 19);
+function generateUniqueUserID() {
+    return Math.random().toString(36).substr(2, 10);
 }
 
 module.exports = router;

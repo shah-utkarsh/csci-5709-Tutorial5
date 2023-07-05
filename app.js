@@ -1,5 +1,5 @@
 const express = require('express');
-
+const path = require('path');
 const app = express();
 
 const userRoute = require('./api/routes/routes');
@@ -22,6 +22,5 @@ app.use((req, res) => {
         message: 'Not found'
     });
 });
-
 
 module.exports = app;

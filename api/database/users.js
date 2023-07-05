@@ -399,33 +399,4 @@ module.exports = [
     "title": "mr",
     "email": "benjamin.wilson@example.com"
   },
-  {
-    "email": "Dalhluisie@gmail.com",
-    "firstName": "Utkarsh",
-    "id": "8319f832-e743-4481-856c-14969e9472e7"
-  },
-  {
-    "email": "EmailChanged@gmail.com",
-    "firstName": "Utkarsh",
-    "lastName": "Shah",
-    "id": "b2e46b6d-af8b-40ba-8654-af858daf3624"
-  },
-  {
-    "email": "JethalalLovesDaya@gmail.com",
-    "firstName": "Jethalal",
-    "lastName": "Gada",
-    "id": "2b6f5b23-1e41-40fc-8f8b-83e57f79f55b"
-  },
-  {
-    "email": "TarakHatesKarela@gmail.com",
-    "firstName": "Tarak",
-    "lastName": "Mehta",
-    "id": "12267751-5fb6-4e87-997e-0772e1001c65"
-  },
-  {
-    "email": "Champuk.Gada@gmail.com",
-    "firstName": "Champak",
-    "lastName": "Gada",
-    "id": "5cd62835-2c08-4f92-a467-ce3c00525d01"
-  }
 ]
